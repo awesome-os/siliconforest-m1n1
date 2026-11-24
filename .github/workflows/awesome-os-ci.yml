@@ -1,0 +1,68 @@
+name: Awesome-OS CI
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate repo, manifests & C11 B8G m1n1 ABI bridge
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify required repository files & upstream MIT license
+        run: |
+          test -f LICENSE
+          grep -q "MIT License" LICENSE
+          test -f README.md
+          test -f Makefile
+          test -f AWESOME-OS-INTEGRATION.md
+          test -f include/b8g_m1n1_abi.h
+
+      - name: Syntax-check & compile-test C11 B8G_ABI_MAGIC_V3 m1n1 handoff header
+        run: |
+          gcc -std=c11 -Wall -Wextra -Werror -fsyntax-only include/b8g_m1n1_abi.h
+          cat << 'EOF' > /tmp/test_b8g_m1n1_abi.c
+          #include "include/b8g_m1n1_abi.h"
+          #include <stdio.h>
+          int main(void) {
+              B8gArenaV1Header arena = {
+                  .arena_magic = B8G_ARENA_V1_MAGIC,
+                  .abi_magic = B8G_ABI_MAGIC_V3,
+                  .version = B8G_M1N1_ABI_VER,
+                  .byte_length = 4096u
+              };
+              B8gM1n1HandoffV3 handoff = {
+                  .abi_magic = B8G_ABI_MAGIC_V3,
+                  .abi_version = B8G_M1N1_ABI_VER,
+                  .boot_target = B8G_M1N1_TARGET_SILICONFOREST_XNU,
+                  .fb_width = 2560u,
+                  .fb_height = 1600u,
+                  .fb_bpp = 32u,
+                  .arena_size = 4096u
+              };
+              if (b8g_m1n1_validate_arena(&arena) != B8G_M1N1_OK) return 1;
+              if (b8g_m1n1_validate_handoff(&handoff) != B8G_M1N1_OK) return 2;
+              printf("b8g_m1n1_abi OK (magic=0x%08x, handoff_size=%zu)\n",
+                     handoff.abi_magic, sizeof(B8gM1n1HandoffV3));
+              return 0;
+          }
+          EOF
+          gcc -std=c11 -Wall -Wextra -Werror -I. /tmp/test_b8g_m1n1_abi.c -o /tmp/test_b8g_m1n1_abi
+          /tmp/test_b8g_m1n1_abi
+
+      - name: Lightweight shell & linker script sanity check
+        run: |
+          sh -n version.sh
+          test -f m1n1.ld
+          test -f m1n1-raw.ld
