@@ -154,3 +154,10 @@ m1n1 embeds other Rust crates. Licenses can be found in their vendor directories
 J700 Stage 1 configuration, ESP Stage 2 setup and installation are documented in
 [docs/j700-install.md](docs/j700-install.md). Release packages include this guide
 as `ESP-AND-INSTALL.md`.
+
+## Quick Start (Windows / Linux / macOS)
+
+```sh
+# Clone & enter repository (all platforms)
+git clone https://github.com/awesome-os/siliconforest-m1n1.git && cd siliconforest-m1n1
+```
