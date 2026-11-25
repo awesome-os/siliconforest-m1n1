@@ -161,3 +161,13 @@ as `ESP-AND-INSTALL.md`.
 # Clone & enter repository (all platforms)
 git clone https://github.com/awesome-os/siliconforest-m1n1.git && cd siliconforest-m1n1
 ```
+
+## Quick Install & Run (Windows / Linux / macOS)
+
+```sh
+# Install / hydrate from v11 CAS via holo-pm
+holo-pm install repository://github.com/awesome-os/siliconforest-m1n1@main
+
+# Or project & run directly via holo-project (0-byte hardlink)
+holo-project "project://cpp/siliconforest-m1n1?from=repository://github.com/awesome-os/siliconforest-m1n1@main"
+```
